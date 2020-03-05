@@ -1,0 +1,99 @@
+{
+"AWSTemplateFormatVersion" : "2010-09-09",
+"Description" : "my script to launch two instances",
+
+"Resources" : {
+
+  "InstanceSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enable SSH access via port 22",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+ "InstancesecurityGroupIngress": {
+   	"Type": "AWS::EC2::SecurityGroupIngress",
+   	"Properties": {
+      	"GroupName": {
+         "Ref": "InstanceSecurityGroup"
+      },
+      "IpProtocol": "tcp",
+      "FromPort": 80,
+      "ToPort": 80,
+      "SourceSecurityGroupId": {
+         "Fn::GetAtt": [
+            "InstanceSecurityGroup",
+            "GroupId"
+         ]
+      }
+   } 
+},
+"MyEC2Instancelin1" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "ImageId" : "ami-0d9462a653c34dab7",
+        "InstanceType" : "t2.micro",
+        "KeyName" : "28012020",
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/sdm",
+            "Ebs" : {
+              "VolumeType" : "gp2",
+              "DeleteOnTermination" : "true",
+              "VolumeSize" : "20"
+            }
+          }
+        ]
+      }
+    },
+
+    "MyEC2Instancelin2" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "ImageId" : "ami-0d9462a653c34dab7",
+        "InstanceType" : "t2.micro",
+        "KeyName" : "28012020",
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/sdm",
+            "Ebs" : {
+              "VolumeType" : "gp2",
+              "DeleteOnTermination" : "true",
+              "VolumeSize" : "30"
+            }
+          }
+        ]
+      }
+    },
+	"MyLoadBalancer" : {
+    "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+    "Properties" : {
+        "AvailabilityZones" : [ "ap-south-1a" ],
+        "Instances" : [
+            { "Ref" : "MyEC2Instancelin1" },
+            { "Ref" : "MyEC2Instancelin2" }
+        ],
+        "Listeners" : [ {
+            "LoadBalancerPort" : "80",
+            "InstancePort" : "80",
+            "Protocol" : "HTTP"
+        } ],
+
+        "HealthCheck" : {
+            "Target" : "HTTP:80/",
+            "HealthyThreshold" : "3",
+            "UnhealthyThreshold" : "5",
+            "Interval" : "30",
+            "Timeout" : "5"
+        }
+    }
+}
+}
+}
